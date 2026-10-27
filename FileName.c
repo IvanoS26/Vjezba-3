@@ -14,32 +14,32 @@ int Ispis(struct cvor* p);
 struct cvor* TraziPrethodnog(char prezime[], struct cvor* p);
 int UnosIza(char imeT[], char prezimeT[], char ime[], char prezime[], struct cvor* p);
 int UnosIspred(char imeT[], char prezimeT[], char ime[], char prezime[], struct cvor* p);
-int SortiraniUnos(char ime[], char prezime[], struct cvor* p);
+int Sort(struct cvor *p);
 int IspisDatoteka(FILE* f, struct cvor* p);
 int CitanjeDatoteka(FILE* f, struct cvor* p);
 
 int main() {
     FILE* f;
-    struct cvor Head1, Head2, Head3;
+    struct cvor Head1, Head2;
     Head1.Next = NULL;
     Head2.Next = NULL;
-    Head3.Next = NULL;
 
+    printf("Obican unos:\n");
     UnosPocetak("Mate", "Matic", &Head1);
-    UnosPocetak("Jure", "Juric", &Head1);
+    UnosPocetak("Zure", "Zuric", &Head1);
     Ispis(&Head1);
 
+    printf("Dodavanje iza:\n");
     UnosIza("Mate", "Matic", "Ivan", "Ivic", &Head1);
     Ispis(&Head1);
 
+    printf("Dodavanje ispred:\n");
     UnosIspred("Mate", "Matic", "Duje", "Dujic", &Head1);
     Ispis(&Head1);
 
-    SortiraniUnos("Ivano", "Ivic", &Head2);
-    SortiraniUnos("Zoran", "Zoric", &Head2);
-    SortiraniUnos("Ana", "Anic", &Head2);
-    SortiraniUnos("Karlo", "Karlic", &Head2);
-    Ispis(&Head2);
+    printf("Sortirano:\n");
+    Sort(&Head1);
+    Ispis(&Head1);
 
     f = fopen("Osobe.txt", "w");
     if (f == NULL) {
@@ -47,7 +47,7 @@ int main() {
         return -1;
     }
 
-    IspisDatoteka(f, &Head2);
+    IspisDatoteka(f, &Head1);
     fclose(f);
 
     f = fopen("Osobe.txt", "r");
@@ -56,8 +56,9 @@ int main() {
         return -1;
     }
 
-    CitanjeDatoteka(f, &Head3);
-    Ispis(&Head3);
+    printf("Procitana datoteka:\n");
+    CitanjeDatoteka(f, &Head2);
+    Ispis(&Head2);
     fclose(f);
 
     return 0;
@@ -80,9 +81,9 @@ int UnosPocetak(char ime[], char prezime[], struct cvor* p) {
 }
 
 int Ispis(struct cvor* p) {
-    printf("Lista je:\n");
+   
     while (p->Next != NULL) {
-        printf("%s %s\n", p->Next->ime, p->Next->prezime);
+        printf("\t%s %s\n", p->Next->ime, p->Next->prezime);
         p = p->Next;
     }
     printf("\n");
@@ -146,29 +147,46 @@ int UnosIspred(char imeT[], char prezimeT[], char ime[], char prezime[], struct 
     return 0;
 }
 
-int SortiraniUnos(char ime[], char prezime[], struct cvor* p) {
-    while (p->Next != NULL && strcmp(p->Next->prezime, prezime) < 0) {
-        p = p->Next;
-    }
+int Sort(struct cvor* p) {
 
-    struct cvor* q = (struct cvor*)malloc(sizeof(struct cvor));
-    if (q == NULL) {
-        printf("Greska!\n");
+    if (p == NULL || p->Next == NULL) {
         return 0;
     }
 
-    strcpy(q->ime, ime);
-    strcpy(q->prezime, prezime);
+    struct cvor *j, *prev_j, *temp, *end;
+    end = NULL;
+    int swapped = 1;
 
-    q->Next = p->Next;
-    p->Next = q;
+    while (swapped) {
+        swapped = 0;
+        prev_j = p;
+        j = p->Next;
+
+        while (j->Next != end) {
+            if (strcmp(j->prezime, j->Next->prezime) > 0) {
+
+                temp = j->Next;
+                prev_j->Next = temp;
+                j->Next = temp->Next;
+                temp->Next = j;
+
+                j = temp;
+                swapped = 1; 
+            }
+
+            prev_j = j;
+            j = j->Next;
+        }
+
+        end = j;
+    }
 
     return 0;
 }
 
 int IspisDatoteka(FILE* f, struct cvor* p) {
     while (p->Next != NULL) {
-        fprintf(f, "%s %s\n", p->Next->ime, p->Next->prezime);
+        fprintf(f,"%s %s\n", p->Next->ime, p->Next->prezime);
         p = p->Next;
     }
     return 0;
@@ -176,8 +194,8 @@ int IspisDatoteka(FILE* f, struct cvor* p) {
 
 int CitanjeDatoteka(FILE* f, struct cvor* p) {
     char ime[20], prezime[20];
-    while (fscanf(f, "%s %s", ime, prezime) == 2) {
-        SortiraniUnos(ime, prezime, p);
+    while (fscanf(f,"%s %s", ime, prezime) == 2) {
+        UnosPocetak(ime, prezime, p);
     }
     return 0;
 }
